@@ -23,14 +23,20 @@ KA13_fig5A_J = [70170382.86704, 12101528.74384, 1277935.32665, 52710.05764, 6040
 
 # Our parameterization
 dust_type = CMT.IlliteType()
-x_sulph = FT(0.1)
+x_sulph = FT(0.51)
 
 Δa_w = Vector{Float64}(undef, length(temp))
 J_ABIFM = Vector{Float64}(undef, length(temp))
 
 it = 1
 for T in temp
-    Δa_w[it] = CMO.Delta_a_w(prs, x_sulph, T)
+    #Δa_w[it] = CMO.Delta_a_w(prs, x_sulph, T)
+
+    a_ice = exp((210368 + 131.438*T - (3.32373e6 *T) - 41729.1*log(T))/(8.31441*T))
+    a_sol = CMO.H2SO4_soln_saturation_vapor_pressure(x_sulph,T) / CMO.H2SO4_soln_saturation_vapor_pressure(FT(0),T)
+
+    Δa_w[it] = max(a_sol - a_ice, FT(0.))
+    println(Δa_w[it])
     J_ABIFM[it] = CMI.ABIFM_J(dust_type, Δa_w[it]) / 100^2
     global it += 1
 end
