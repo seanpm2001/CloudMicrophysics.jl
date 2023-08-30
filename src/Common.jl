@@ -182,8 +182,18 @@ function Delta_a_w(prs::APS, x::FT, T::FT) where {FT <: Real}
     p_ice = TD.saturation_vapor_pressure(thermo_params, T, TD.Ice())
 
     a_w = p_sol / p_sat
-    a_w_ice = p_ice / p_sat
+    a_w_ice_1 = p_ice / p_sat
+
+    # from Karcher
+    T_inv = FT(1)/T
+    dmu   = 210368.0 + 131.438 * T - 3.32373e6 * T_inv -41729.1 * log(T)
+    a_w_ice   = exp(dmu * T_inv / 8.31441)
+
+    #println(a_w_ice_1, " ", a_w_ice)
+
     Δa_w = a_w - a_w_ice
+
+    println(Δa_w, " = ", a_w, " - ", a_w_ice)
 
     return min(Δa_w, FT(1))
 end
