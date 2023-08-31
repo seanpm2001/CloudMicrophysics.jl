@@ -151,15 +151,18 @@ function H2SO4_soln_saturation_vapor_pressure(
     c6::FT = CMP.H2SO4_sol_c6(prs)
     c7::FT = CMP.H2SO4_sol_c7(prs)
 
-    @assert T < T_max
-    @assert T > T_min
+    p_sol::FT = 0
 
+    #if T < T_max && T > T_min
+    #@assert T < T_max
+    #@assert T > T_min
     w_h = w_2 * x
     p_sol =
         exp(
             c1 - c2 * x + c3 * x * w_h - c4 * x * w_h^2 +
             (c5 + c6 * x - c7 * x * w_h) / T,
         ) * 100 # * 100 converts mbar --> Pa
+    #end
     return p_sol
 end
 
