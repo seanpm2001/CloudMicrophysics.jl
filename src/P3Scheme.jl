@@ -33,7 +33,7 @@ From measurements of mass grown by vapor diffusion and aggregation
 in midlatitude cirrus by Brown and Francis (1995)
 doi: 10.1175/1520-0426(1995)012<0410:IMOTIW>2.0.CO;2
 """
-α_va_si(p3::PSP3{FT}) where {FT} = FT(p3.α_va * 10^(6 * p3.β_va - 3))
+α_va_si(p3::PSP3{FT}) where {FT} = p3.α_va * 10^(6 * p3.β_va - 3)
 
 """
     D_th_helper(p3)
@@ -43,7 +43,8 @@ doi: 10.1175/1520-0426(1995)012<0410:IMOTIW>2.0.CO;2
 Returns the critical size separating spherical and nonspherical ice, in meters.
 Eq. 8 in Morrison and Milbrandt (2015).
 """
-D_th_helper(p3::PSP3) = (π * p3.ρ_i / 6 / α_va_si(p3))^(1 / (p3.β_va - 3))
+D_th_helper(p3::PSP3{FT}) where {FT} =
+    (FT(π) * p3.ρ_i / 6 / α_va_si(p3))^(1 / (p3.β_va - 3))
 
 """
     D_cr_helper(p3, F_r, ρ_g)
@@ -57,7 +58,7 @@ Eq. 14 in Morrison and Milbrandt (2015).
 """
 function D_cr_helper(p3::PSP3{FT}, F_r::FT, ρ_g::FT) where {FT}
     α_va = α_va_si(p3)
-    return (1 / (1 - F_r) * 6 * α_va / π / ρ_g)^(1 / (3 - p3.β_va))
+    return (1 / (1 - F_r) * 6 * α_va / FT(π) / ρ_g)^(1 / (3 - p3.β_va))
 end
 
 """
@@ -71,7 +72,7 @@ Eq. 15 in Morrison and Milbrandt (2015).
 """
 function D_gr_helper(p3::PSP3{FT}, ρ_g::FT) where {FT}
     α_va = α_va_si(p3)
-    return (6 * α_va / π / ρ_g)^(1 / (3 - p3.β_va))
+    return (6 * α_va / FT(π) / ρ_g)^(1 / (3 - p3.β_va))
 end
 
 """
@@ -84,8 +85,7 @@ end
 Returns the density of total (deposition + rime) ice mass for graupel, in kg/m3
 Eq. 16 in Morrison and Milbrandt (2015).
 """
-ρ_g_helper(ρ_r::FT, F_r::FT, ρ_d::FT) where {FT} =
-    FT(F_r * ρ_r + (1 - F_r) * ρ_d)
+ρ_g_helper(ρ_r::FT, F_r::FT, ρ_d::FT) where {FT} = F_r * ρ_r + (1 - F_r) * ρ_d
 
 """
     ρ_d_helper(p3, D_cr, D_gr)
@@ -99,11 +99,9 @@ Eq. 17 in Morrison and Milbrandt (2015).
 """
 function ρ_d_helper(p3::PSP3{FT}, D_cr::FT, D_gr::FT) where {FT}
     α_va = α_va_si(p3)
-    β_m2 = p3.β_va - FT(2)
-    return FT(
-        6 * α_va * (D_cr^β_m2 - D_gr^β_m2) / π / β_m2 /
-        max(D_cr - D_gr, eps(FT)),
-    )
+    β_m2 = p3.β_va - 2
+    return 6 * α_va * (D_cr^β_m2 - D_gr^β_m2) / FT(π) / β_m2 /
+           max(D_cr - D_gr, eps(FT))
 end
 
 """
@@ -166,7 +164,8 @@ mass_s(D::FT, ρ::FT) where {FT <: Real} = FT(π) / 6 * ρ * D^3
 # for large nonspherical ice (used for unrimed and dense types)
 mass_nl(p3::PSP3, D::FT) where {FT <: Real} = α_va_si(p3) * D^p3.β_va
 # for partially rimed ice
-mass_r(p3::PSP3, D::FT, F_r::FT) where {FT <: Real} = α_va_si(p3) / (1 - F_r) * D^p3.β_va
+mass_r(p3::PSP3, D::FT, F_r::FT) where {FT <: Real} =
+    α_va_si(p3) / (1 - F_r) * D^p3.β_va
 
 """
     p3_mass(p3, D, F_r, th)
@@ -209,8 +208,8 @@ function p3_mass(
 
 end
 
-# Some wrappers to cast types from SF.gamma (which returns Float64
-# even when the input is Float32
+# Some wrappers to cast types from SF.gamma
+# (which returns Float64 even when the input is Float32)
 Γ(a::FT, z::FT) where {FT <: Real} = FT(SF.gamma(a, z))
 Γ(a::FT) where {FT <: Real} = FT(SF.gamma(a))
 
@@ -238,7 +237,7 @@ end
 
 Returns the shape parameter N₀ from Eq. 2 in Morrison and Milbrandt (2015).
 """
-function DSD_N₀(N::FT, λ::FT) where{FT}
+function DSD_N₀(N::FT, λ::FT) where {FT}
     μ = DSD_μ(λ)
     return N / Γ(1 + μ) * λ^(1 + μ)
 end
@@ -261,11 +260,7 @@ end
 # or
 # q_rim > 0 and D_min = D_gr, D_max = D_cr, ρ = ρ_g
 function q_s(ρ::FT, N_0::FT, λ::FT, D_min::FT, D_max::FT) where {FT}
-    x = FT(DSD_μ(λ) + 4)
-    @info("inside q_s = ", ρ, N_0, λ, x, D_min, D_max)
-    @info("check ", N_0 / λ^x)
-    @info("check ", N_0)
-    @info("check ", FT(1) / λ^x)
+    x = DSD_μ(λ) + 4
     return FT(π) / 6 * ρ * N_0 / λ^x * (Γ(x, λ * D_min) - Γ(x, λ * D_max))
 end
 # q_rim = 0 and D_min = D_th, D_max = inf
@@ -280,10 +275,10 @@ function q_n(p3::PSP3, N_0::FT, λ::FT, D_min::FT, D_max::FT) where {FT}
 end
 # partially rimed ice or large unrimed ice (upper bound on D is infinity)
 # q_rim > 0 and D_min = D_cr, D_max = inf
-function q_r(p3::PSP3, F_r::FT, N_0::FT, λ::FT, D_min::FT) where{FT}
+function q_r(p3::PSP3, F_r::FT, N_0::FT, λ::FT, D_min::FT) where {FT}
     x = DSD_μ(λ) + p3.β_va + 1
     return p3.α_va * N_0 / (1 - F_r) / λ^x *
-        (Γ(x) + Γ(x, λ * D_min) - (x - 1) * Γ(x - 1))
+           (Γ(x) + Γ(x, λ * D_min) - (x - 1) * Γ(x - 1))
 end
 
 """
@@ -303,34 +298,22 @@ function q_gamma(
     F_r::FT,
     N::FT,
     log_λ::FT,
-    th = (; D_cr = FT(0), D_gr = FT(0), ρ_g = FT(0), ρ_d = FT(0))
-) where{FT}
+    th = (; D_cr = FT(0), D_gr = FT(0), ρ_g = FT(0), ρ_d = FT(0)),
+) where {FT}
 
     D_th = D_th_helper(p3)
     λ = exp(log_λ)
     N_0 = DSD_N₀(N, λ)
 
-    println(" ")
-    println("log_λ = ", log_λ)
-    println("λ = ", λ)
-    println("Fr = ", F_r," N0 = ", N_0, " x =  ", log_λ," μ =  ", DSD_μ(λ), " th =  ", th)
-    println("q = sum of:")
-    println("    q_s = ", q_s(p3.ρ_i, N_0, λ, FT(0), D_th))
-    println("    q_rz = ", q_rz(p3, N_0, λ, D_th))
-    println("    q_n = ", q_n(p3, N_0, λ, D_th, th.D_gr))
-    println("    q_s 2 = ", q_s(th.ρ_g, N_0, λ, th.D_gr, th.D_cr))
-    println("    q_r = ", q_r(p3, F_r, N_0, λ, th.D_cr))
-
     return ifelse(
         F_r == FT(0),
         q_s(p3.ρ_i, N_0, λ, FT(0), D_th) + q_rz(p3, N_0, λ, D_th),
         q_s(p3.ρ_i, N_0, λ, FT(0), D_th) +
-               q_n(p3, N_0, λ, D_th, th.D_gr) +
-               q_s(th.ρ_g, N_0, λ, th.D_gr, th.D_cr) +
-               q_r(p3, F_r, N_0, λ, th.D_cr)
+        q_n(p3, N_0, λ, D_th, th.D_gr) +
+        q_s(th.ρ_g, N_0, λ, th.D_gr, th.D_cr) +
+        q_r(p3, F_r, N_0, λ, th.D_cr),
     )
 end
-
 
 """
     distrbution_parameter_solver()
@@ -346,7 +329,13 @@ Returns a named tuple containing:
  - N_0 - intercept size distribution parameter [1/m4]
  - λ - slope size distribution parameter [1/m]
 """
-function distribution_parameter_solver(p3::PSP3{FT}, q::FT, N::FT, ρ_r::FT, F_r::FT) where {FT}
+function distribution_parameter_solver(
+    p3::PSP3{FT},
+    q::FT,
+    N::FT,
+    ρ_r::FT,
+    F_r::FT,
+) where {FT}
 
     # Get the thresholds for different particles regimes
     th = thresholds(p3, ρ_r, F_r)
@@ -355,18 +344,16 @@ function distribution_parameter_solver(p3::PSP3{FT}, q::FT, N::FT, ρ_r::FT, F_r
     shape_problem(x) = q - q_gamma(p3, F_r, N, x, th)
 
     # Find slope parameter
-    x = RS.find_zero(
-        shape_problem,
-        RS.SecantMethod(FT(log(20000)), FT(log(50000))),
-        RS.CompactSolution(),
-        RS.RelativeSolutionTolerance(eps(FT)),
-        10,
-    ).root
+    x =
+        RS.find_zero(
+            shape_problem,
+            RS.SecantMethod(FT(log(20000)), FT(log(50000))),
+            RS.CompactSolution(),
+            RS.RelativeSolutionTolerance(eps(FT)),
+            10,
+        ).root
 
-    return(;
-        λ = exp(x),
-        N_0 = DSD_N₀(N, exp(x))
-    )
+    return (; λ = exp(x), N_0 = DSD_N₀(N, exp(x)))
 end
 
 end
