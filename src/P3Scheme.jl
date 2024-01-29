@@ -261,7 +261,11 @@ end
 # or
 # q_rim > 0 and D_min = D_gr, D_max = D_cr, ρ = ρ_g
 function q_s(ρ::FT, N_0::FT, λ::FT, D_min::FT, D_max::FT) where {FT}
-    x = DSD_μ(λ) + 4
+    x = FT(DSD_μ(λ) + 4)
+    @info("inside q_s = ", ρ, N_0, λ, x, D_min, D_max)
+    @info("check ", N_0 / λ^x)
+    @info("check ", N_0)
+    @info("check ", FT(1) / λ^x)
     return FT(π) / 6 * ρ * N_0 / λ^x * (Γ(x, λ * D_min) - Γ(x, λ * D_max))
 end
 # q_rim = 0 and D_min = D_th, D_max = inf
