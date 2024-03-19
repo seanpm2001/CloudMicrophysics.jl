@@ -26,3 +26,13 @@ steps:
     key: "cpu_unittests"
     command:
       - "julia --project=test --color=yes test/aerosol_activation_emulators.jl"
+
+  - wait
+
+  - label: ":envelope: Slack report"
+    command: |
+        if [[ ${{ steps.cpu_unittests.exit_code }} -eq 0 ]]; then
+          slack-upload -c "#microphysics-dev" -x "CM.jl longruns success"
+        else
+          slack-upload -c "#microphysics-dev" -x "CM.jl longruns failure :("
+        fi
