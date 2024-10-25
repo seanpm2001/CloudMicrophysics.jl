@@ -153,7 +153,7 @@ struct CloudIce{FT, PD, MS} <: CloudCondensateType{FT}
     r_ice_snow::FT
     "deposition sublimation non_equil microphysics relaxation timescale [s]"
     τ_relax::FT
-    "ice density [kg/m3]"
+    "cloud ice apparent density [kg/m3]"
     ρi::FT
 end
 
@@ -162,7 +162,7 @@ CloudIce(::Type{FT}) where {FT <: AbstractFloat} =
 
 function CloudIce(toml_dict::CP.AbstractTOMLDict = CP.create_toml_dict(FT))
     name_map = (;
-        :density_ice_water => :ρi,
+        :cloud_ice_apparent_density => :ρi,
         :cloud_ice_crystals_length_scale => :r0,
         :cloud_ice_size_distribution_coefficient_n0 => :n0,
         :cloud_ice_mass_size_relation_coefficient_me => :me,
@@ -180,7 +180,7 @@ end
 
 function ParticleMass(::Type{CloudIce}, td::CP.AbstractTOMLDict)
     name_map = (;
-        :density_ice_water => :ρi,
+        :cloud_ice_apparent_density => :ρi,
         :cloud_ice_crystals_length_scale => :r0,
         :cloud_ice_mass_size_relation_coefficient_me => :me,
         :cloud_ice_mass_size_relation_coefficient_delm => :Δm,
@@ -298,7 +298,7 @@ struct Snow{FT, PD, MS, AR, VT, AC} <: PrecipitationType{FT}
     r0::FT
     "freezing temperature of water [K]"
     T_freeze::FT
-    "ice density [kg/m3]"
+    "snow apparent density [kg/m3]"
     ρᵢ::FT
 end
 
@@ -307,7 +307,7 @@ Snow(::Type{FT}) where {FT <: AbstractFloat} = Snow(CP.create_toml_dict(FT))
 function Snow(toml_dict::CP.AbstractTOMLDict)
     name_map = (;
         :cloud_ice_crystals_length_scale => :r0,
-        :density_ice_water => :ρi,
+        :snow_apparent_density => :ρi,
         :snow_autoconversion_timescale => :τ,
         :cloud_ice_specific_humidity_autoconversion_threshold =>
             :q_threshold,
@@ -347,7 +347,7 @@ end
 
 function ParticleMass(::Type{Snow}, td::CP.AbstractTOMLDict)
     name_map = (;
-        :density_liquid_water => :ρ,
+        :snow_apparent_density => :ρ,
         :snow_flake_length_scale => :r0,
         :snow_mass_size_relation_coefficient_me => :me,
         :snow_mass_size_relation_coefficient_delm => :Δm,

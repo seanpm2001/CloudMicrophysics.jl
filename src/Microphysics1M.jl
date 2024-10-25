@@ -179,8 +179,8 @@ function terminal_velocity(
     return fall_w
 end
 function terminal_velocity(
-    (; pdf, mass, area)::CMP.Snow{FT},
-    vel::CMP.Chen2022VelTypeSnowIce{FT},
+    (; pdf, mass, area, ρᵢ)::CMP.Snow{FT},
+    vel::CMP.Chen2022VelTypeLargeIce{FT},
     ρ::FT,
     q::FT,
 ) where {FT}
@@ -191,8 +191,8 @@ function terminal_velocity(
     # from D=125um to D=625um using B2 and D=625um to inf using B4.
     if q > FT(0)
         # coefficients from Table B4 from Chen et. al. 2022
-        aiu, bi, ciu = CO.Chen2022_vel_coeffs_B4(vel, ρ)
-        #aiu, bi, ciu = CO.Chen2022_vel_coeffs_B2(vel, ρ)
+        aiu, bi, ciu = CO.Chen2022_vel_coeffs_B4(vel, ρ, ρᵢ)
+        #aiu, bi, ciu = CO.Chen2022_vel_coeffs_B2(vel, ρ, ρᵢ)
         # size distribution parameter
         λ::FT = lambda(pdf, mass, q, ρ)
 

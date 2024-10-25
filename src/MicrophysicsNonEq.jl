@@ -156,14 +156,14 @@ function terminal_velocity(
 end
 function terminal_velocity(
     (; pdf, mass, ρi)::CMP.CloudIce{FT},
-    vel::CMP.Chen2022VelTypeSnowIce{FT},
+    vel::CMP.Chen2022VelTypeSmallIce{FT},
     ρ::FT,
     q::FT,
 ) where {FT}
     fall_w = FT(0)
     if q > FT(0)
         # Coefficients from Table B2 from Chen et. al. 2022
-        aiu, bi, ciu = CO.Chen2022_vel_coeffs_B2(vel, ρ)
+        aiu, bi, ciu = CO.Chen2022_vel_coeffs_B2(vel, ρ, ρᵢ)
         # See the comment for liquid droplets above
         N = FT(500 * 1e6)
         D = cbrt(ρ * q / N / ρi)

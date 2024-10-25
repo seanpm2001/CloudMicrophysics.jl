@@ -16,16 +16,18 @@ of its size (maximum dimension, D) using the Chen 2022 parametrization.
 function ice_particle_terminal_velocity(
     p3::PSP3,
     D::FT,
-    Chen2022::CMP.Chen2022VelTypeSnowIce,
+    Chen2022_small::CMP.Chen2022VelTypeSmallIce,
+    Chen2022_large::CMP.Chen2022VelTypeLargeIce,
     ρₐ::FT,
     F_rim::FT,
     th,
     use_aspect_ratio = true,
 ) where {FT}
+    ρᵢ = p3_density(p3, D, F_rim, th)
     if D <= Chen2022.cutoff
-        (ai, bi, ci) = CO.Chen2022_vel_coeffs_B2(Chen2022, ρₐ)
+        (ai, bi, ci) = CO.Chen2022_vel_coeffs_B2(Chen2022_small, ρₐ, ρᵢ)
     else
-        (ai, bi, ci) = CO.Chen2022_vel_coeffs_B4(Chen2022, ρₐ)
+        (ai, bi, ci) = CO.Chen2022_vel_coeffs_B4(Chen2022_large, ρₐ, ρᵢ)
     end
     v = sum(@. sum(ai * D^bi * exp(-ci * D)))
 
